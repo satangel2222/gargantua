@@ -9,7 +9,9 @@
 #  依赖：git, curl, python3
 # ============================================================================
 set -euo pipefail
-DIR="${1:?usage: publish.sh <project-dir> [repo-name]}"
+CI=0
+if [ "${1:-}" = "--ci" ]; then CI=1; shift; fi
+DIR="${1:?usage: publish.sh [--ci] <project-dir> [repo-name]}"
 REPO="${2:-$(basename "$(cd "$DIR" && pwd)")}"
 TOKEN="${GITHUB_TOKEN:?需要 GITHUB_TOKEN 环境变量}"
 API="https://api.github.com"
@@ -48,8 +50,18 @@ say "已推送 $(git rev-parse --short HEAD)"
 git remote get-url origin >/dev/null 2>&1 && git remote set-url origin "https://github.com/${USER}/${REPO}.git" \
   || git remote add origin "https://github.com/${USER}/${REPO}.git"
 
-curl -sS -X POST "${AH[@]}" "$API/repos/${USER}/${REPO}/pages" -d '{"source":{"branch":"main","path":"/"}}' >/dev/null 2>&1 || \
-curl -sS -X PUT  "${AH[@]}" "$API/repos/${USER}/${REPO}/pages" -d '{"source":{"branch":"main","path":"/"}}' >/dev/null 2>&1 || true
+if [ "$CI" = "1" ]; then
+  say "CI 模式：安装可复用工作流（以后 push 自动发布）"
+  mkdir -p .github/workflows
+  printf 'name: deploy\non: [push]\njobs:\n  pages:\n    uses: %s/deploy-kit/.github/workflows/pages-reusable.yml@main\n    permissions: { contents: read, pages: write, id-token: write }\n' "$USER" > .github/workflows/deploy.yml
+  git add -A && git -c user.email=deploy@local -c user.name=deploy commit -qm "ci: reusable pages workflow"
+  git push -q "https://${USER}:${TOKEN}@github.com/${USER}/${REPO}.git" HEAD:main -f
+  BODY='{"build_type":"workflow"}'
+else
+  BODY='{"source":{"branch":"main","path":"/"}}'
+fi
+curl -sS -X POST "${AH[@]}" "$API/repos/${USER}/${REPO}/pages" -d "$BODY" >/dev/null 2>&1 || \
+curl -sS -X PUT  "${AH[@]}" "$API/repos/${USER}/${REPO}/pages" -d "$BODY" >/dev/null 2>&1 || true
 
 URL="https://${USER}.github.io/${REPO}/"
 say "等待首次构建…"
