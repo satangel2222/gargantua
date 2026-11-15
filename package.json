@@ -1,0 +1,14 @@
+{
+  "name": "gargantua",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GARGANTUA — a single-file, self-contained WebGL2 general-relativistic black hole.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node build.mjs && node serve.mjs",
+    "serve": "node serve.mjs"
+  },
+  "keywords": ["webgl2", "glsl", "raytracing", "blackhole", "general-relativity", "threejs", "shader"],
+  "license": "MIT"
+}
