@@ -127,8 +127,8 @@ npm run build       # src/  →  index.html
 
 Any static host works — it is a single HTML file.
 
-* **GitHub Pages** — push and the bundled workflow (`.github/workflows/pages.yml`)
-  publishes `index.html` automatically.
+* **GitHub Pages** — `./deploy/publish-github.sh` creates the repo, pushes and turns Pages on
+  in one shot (needs a `repo`-scoped token).
 * **Netlify / Vercel / Cloudflare Pages** — drag `index.html` in. Done.
 * **Anywhere** — `index.html` is fully standalone apart from the three.js CDN.
 
