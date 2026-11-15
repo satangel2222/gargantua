@@ -1,0 +1,40 @@
+# ============================================================================
+#  可复用工作流：任何仓库 .github/workflows/deploy.yml 里写 6 行就能用
+#
+#    name: deploy
+#    on: [push]
+#    jobs:
+#      pages:
+#        uses: <你的用户名>/deploy-kit/.github/workflows/pages-reusable.yml@main
+#        permissions: { contents: read, pages: write, id-token: write }
+#
+#  用 GitHub 内置的 GITHUB_TOKEN，不需要任何密钥、不需要 PAT。
+# ============================================================================
+name: pages
+on:
+  workflow_call:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: build (if any)
+        run: if [ -f build.mjs ]; then node build.mjs; fi
+      - name: stage
+        run: |
+          mkdir -p _site
+          rsync -a --exclude .git --exclude node_modules --exclude _site ./ _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: '_site' }
+      - id: deployment
+        uses: actions/deploy-pages@v4
