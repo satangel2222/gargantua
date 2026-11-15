@@ -15,6 +15,10 @@
            ████████████
 ```
 
+![GARGANTUA](docs/hero.png)
+
+> Captured from the headless software rasteriser at 640×360 (single-digit fps by design — on a real GPU this runs at 2× SSAA / 360 RK4 steps).
+
 ---
 
 ## Run it
